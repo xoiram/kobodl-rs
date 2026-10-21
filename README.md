@@ -24,13 +24,23 @@ Configuration is through environment variables:
 
 ### Docker
 
+The image is published to `ghcr.io/xoiram/kobodl-rs`. `latest` follows the main branch, and `sha-<commit>` tags pin
+a specific build.
+
 ```sh
-docker compose up -d --build
+docker compose up -d
 ```
 
 The example [docker-compose.yml](docker-compose.yml) publishes the app on `127.0.0.1:8080` only and keeps its data in
-the `kobodl-data` volume. The image runs as a non-root user (UID 65532); if you bind-mount a host directory at `/data`
+the `kobodl-data` volume. While the repository is private, so is the image: log in first with
+`docker login ghcr.io -u <github-user>` and a personal access token with the `read:packages` scope. The image runs as a non-root user (UID 65532); if you bind-mount a host directory at `/data`
 instead of using a volume, make that directory writable for that user.
+
+### Kubernetes
+
+Mount a PersistentVolumeClaim at `/data`. The container runs as UID 65532, so set `fsGroup: 65532` in the pod's
+`securityContext` to make the volume writable. Run a single replica with the `Recreate` deployment strategy: a pending
+login is kept in memory, and two pods must not share `state.json`.
 
 ### Staying logged in
 
