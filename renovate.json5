@@ -1,0 +1,19 @@
+// Renovate, self-hosted in the d42-infra cluster (docs/runbooks/renovate.md
+// there). It covers Cargo dependencies, the Dockerfile's base images and the
+// GitHub Actions in .github/workflows. Everything is a PR to review: CI runs
+// on them, but nothing automerges.
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: ['config:recommended', ':dependencyDashboard'],
+  timezone: 'Europe/Oslo',
+  gitAuthor: 'Renovate <renovate@dot42.no>',
+  // The Rust version is pinned in the Dockerfile (rust:1.95-alpine) and in
+  // rust-toolchain.toml; Renovate only knows the first, so bump both together.
+  packageRules: [
+    {
+      description: 'Rust toolchain: keep rust-toolchain.toml in step by hand',
+      matchPackageNames: ['rust'],
+      prBodyNotes: ['Also bump `channel` in `rust-toolchain.toml`.'],
+    },
+  ],
+}
