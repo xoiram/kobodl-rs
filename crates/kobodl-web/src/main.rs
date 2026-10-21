@@ -15,8 +15,16 @@ async fn main() -> anyhow::Result<()> {
     let data_dir = PathBuf::from(std::env::var_os("KOBODL_DATA_DIR").unwrap_or_else(|| "data".into()));
     std::fs::create_dir_all(&data_dir).with_context(|| format!("can't create {}", data_dir.display()))?;
 
+    let output_dir = std::env::var_os("KOBODL_OUTPUT_DIR")
+        .filter(|dir| !dir.is_empty())
+        .map(PathBuf::from);
+    if let Some(output_dir) = &output_dir {
+        tracing::info!("books can be saved to {}", output_dir.display());
+    }
+
     let app = kobodl_web::app(Config {
         data_dir,
+        output_dir,
         endpoints: Endpoints::default(),
     })?;
 

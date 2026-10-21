@@ -12,7 +12,8 @@ The port is based on `subdavis/kobo-book-downloader` at commit `d096092` (2026-0
 ## Non-goals for v1
 
 - CLI, multiple accounts, wishlist, user-configurable filename templates.
-- Saving books to a server-side folder, bulk downloads, download history, or integration with other tools.
+- Bulk downloads, download history, or integration with other tools. Saving single books to a folder on the server
+  was added after v1 (see phase 5).
 - Audiobooks. `kobo.py` supports them, so they can come later.
 - Adobe DRM (`AdobeDrm`). Like upstream, report these books as unsupported instead of downloading them.
 
@@ -178,6 +179,9 @@ Each phase ends with something that works.
    tokens. Done when an imported login can download a book.
 4. **Packaging.** Multi-stage Dockerfile (musl static binary on `scratch` or distroless), example docker-compose,
    reverse proxy docs, GitHub Actions CI (fmt, clippy, test).
+
+5. **Output folder.** Optional `KOBODL_OUTPUT_DIR` with a "Save to server" button per book, so books can go straight
+   into another app's ingest folder. Files appear only when complete and are readable by other users.
 
 ## Risks
 

@@ -23,6 +23,10 @@ struct TestApp {
 
 impl TestApp {
     async fn start(credentials: Option<Credentials>) -> Self {
+        Self::start_with_output_dir(credentials, None).await
+    }
+
+    async fn start_with_output_dir(credentials: Option<Credentials>, output_dir: Option<&std::path::Path>) -> Self {
         let server = MockServer::start().await;
         let data_dir = tempfile::tempdir().unwrap();
         if let Some(credentials) = credentials {
@@ -31,6 +35,7 @@ impl TestApp {
         let base = Url::parse(&format!("{}/", server.uri())).unwrap();
         let app = kobodl_web::app(Config {
             data_dir: data_dir.path().to_owned(),
+            output_dir: output_dir.map(ToOwned::to_owned),
             endpoints: Endpoints {
                 store_api: base.clone(),
                 auth: base,
@@ -79,6 +84,30 @@ impl TestApp {
 
     fn stored_credentials(&self) -> Credentials {
         CredentialsStore::new(self.data_dir.path()).load().unwrap()
+    }
+
+    /// Serves a library with one DRM-free book, and the book itself. Returns the book's EPUB.
+    async fn mount_book_download(&self, revision_id: &str, title: &str) -> Vec<u8> {
+        self.mount_library(json!([book(revision_id, title, false, false)]))
+            .await;
+        Mock::given(method("GET"))
+            .and(path(format!("/v1/products/books/{revision_id}/access")))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "ContentUrls": [{
+                    "DRMType": "SignedNoDrm",
+                    "UrlFormat": "EPUB3",
+                    "DownloadUrl": format!("{}/files/{revision_id}", self.server.uri()),
+                }],
+            })))
+            .mount(&self.server)
+            .await;
+        let epub = epub();
+        Mock::given(method("GET"))
+            .and(path(format!("/files/{revision_id}")))
+            .respond_with(ResponseTemplate::new(200).set_body_bytes(epub.clone()))
+            .mount(&self.server)
+            .await;
+        epub
     }
 
     async fn mount_library(&self, entries: Value) {
@@ -276,24 +305,7 @@ fn epub() -> Vec<u8> {
 #[tokio::test]
 async fn downloads_a_book() {
     let app = TestApp::start(Some(logged_in())).await;
-    app.mount_library(json!([book("rev-1", "Kniv", false, false)])).await;
-    Mock::given(method("GET"))
-        .and(path("/v1/products/books/rev-1/access"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
-            "ContentUrls": [{
-                "DRMType": "SignedNoDrm",
-                "UrlFormat": "EPUB3",
-                "DownloadUrl": format!("{}/files/rev-1", app.server.uri()),
-            }],
-        })))
-        .mount(&app.server)
-        .await;
-    let epub = epub();
-    Mock::given(method("GET"))
-        .and(path("/files/rev-1"))
-        .respond_with(ResponseTemplate::new(200).set_body_bytes(epub.clone()))
-        .mount(&app.server)
-        .await;
+    let epub = app.mount_book_download("rev-1", "Kniv").await;
 
     let response = app.get("/books/rev-1/epub").await;
 
@@ -405,4 +417,60 @@ async fn invalid_import_is_explained() {
             .await
             .contains("isn&#39;t a kobo-book-downloader or kobodl settings file")
     );
+}
+
+#[tokio::test]
+async fn saves_a_book_to_the_output_folder() {
+    let output_dir = tempfile::tempdir().unwrap();
+    let app = TestApp::start_with_output_dir(Some(logged_in()), Some(output_dir.path())).await;
+    let epub = app.mount_book_download("rev-1", "Kniv").await;
+
+    let page = body_text(app.get("/library?read=true").await).await;
+    assert!(page.contains(r#"action="/books/rev-1/save""#));
+    assert!(page.contains(r#"<input type="hidden" name="read" value="true">"#));
+
+    let response = app.post_form("/books/rev-1/save", &[("read", "true")]).await;
+
+    assert_eq!(location(&response), "/library?read=true&saved=rev%2D1");
+    let saved: Vec<_> = std::fs::read_dir(output_dir.path())
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+        .collect();
+    assert_eq!(saved, ["Jo Nesbø - Kniv rev-1.epub"]);
+    let path = output_dir.path().join(&saved[0]);
+    assert_eq!(std::fs::read(&path).unwrap(), epub);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode();
+        assert_eq!(
+            mode & 0o444,
+            0o444,
+            "other users must be able to read it, mode {mode:o}"
+        );
+    }
+
+    let page = body_text(app.get("/library?read=true&saved=rev-1").await).await;
+    assert!(page.contains("Saved “Kniv” to the server."));
+}
+
+#[tokio::test]
+async fn saving_needs_an_output_folder() {
+    let app = TestApp::start(Some(logged_in())).await;
+    app.mount_library(json!([book("rev-1", "Kniv", false, false)])).await;
+
+    assert!(!body_text(app.get("/library").await).await.contains("Save to server"));
+    let response = app.post_form("/books/rev-1/save", &[]).await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn missing_output_folder_is_a_startup_error() {
+    let data_dir = tempfile::tempdir().unwrap();
+    let result = kobodl_web::app(Config {
+        data_dir: data_dir.path().to_owned(),
+        output_dir: Some(data_dir.path().join("missing")),
+        endpoints: Endpoints::default(),
+    });
+    assert!(result.is_err());
 }

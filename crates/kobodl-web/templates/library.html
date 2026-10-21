@@ -11,6 +11,10 @@
   </div>
 </header>
 
+{% if let Some(title) = saved_title %}
+<p class="notice">Saved “{{ title }}” to the server.</p>
+{% endif %}
+
 <div class="toolbar">
   <form method="get" action="/library">
     <label><input type="checkbox" name="read" value="true" {% if show_read %}checked{% endif %}> Show read books</label>
@@ -37,6 +41,13 @@
         <span class="muted">{{ reason }}</span>
         {% else %}
         <a class="button" href="/books/{{ book.revision_id }}/epub">Download EPUB</a>
+        {% if output_dir.is_some() %}
+        <form class="inline" method="post" action="/books/{{ book.revision_id }}/save">
+          {% if show_read %}<input type="hidden" name="read" value="true">{% endif %}
+          {% if show_archived %}<input type="hidden" name="archived" value="true">{% endif %}
+          <button class="secondary">Save to server</button>
+        </form>
+        {% endif %}
         {% endif %}
       </td>
     </tr>
@@ -48,5 +59,6 @@
 {% if hidden_count > 0 %}
 <p class="muted">{{ hidden_count }} {% if hidden_count == 1 %}book is{% else %}books are{% endif %} hidden by the filters.</p>
 {% endif %}
-<p class="muted">Downloads take a few seconds while the book is fetched and decrypted.</p>
+<p class="muted">Downloads take a few seconds while the book is fetched and decrypted.
+{% if let Some(output_dir) = output_dir %}“Save to server” puts the EPUB in <code>{{ output_dir }}</code>.{% endif %}</p>
 {% endblock %}

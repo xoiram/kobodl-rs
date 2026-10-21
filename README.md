@@ -20,6 +20,7 @@ Configuration is through environment variables:
 |---|---|---|
 | `KOBODL_LISTEN` | `127.0.0.1:8080` | Address to listen on |
 | `KOBODL_DATA_DIR` | `data` | Directory for `state.json`, which holds the Kobo login tokens |
+| `KOBODL_OUTPUT_DIR` | not set | Folder on the server that books can be saved to. Adds a "Save to server" button |
 | `RUST_LOG` | `info` | Log level |
 
 ### Docker
@@ -36,11 +37,34 @@ the `kobodl-data` volume. While the repository is private, so is the image: log 
 `docker login ghcr.io -u <github-user>` and a personal access token with the `read:packages` scope. The image runs as a non-root user (UID 65532); if you bind-mount a host directory at `/data`
 instead of using a volume, make that directory writable for that user.
 
+### Saving to a folder on the server
+
+With `KOBODL_OUTPUT_DIR` set, each book gets a "Save to server" button next to "Download EPUB". Point it at the ingest
+folder of Calibre-Web Automated or a similar app, and saved books are imported from there without any integration
+between the two.
+
+Books only appear in the folder once they're complete: they're written to hidden `.kobodl-*.part` files first and
+then renamed. Saved files are readable by other users (mode `0644`), and a book that is saved again replaces the
+earlier file.
+
+The app has to be able to write to the folder, and the other app has to be able to delete files from it. The
+simplest way is to run both as the same user. For Calibre-Web Automated, that's its `PUID`/`PGID`, usually 1000.
+
 ### Kubernetes
 
 Mount a PersistentVolumeClaim at `/data`. The container runs as UID 65532, so set `fsGroup: 65532` in the pod's
 `securityContext` to make the volume writable. Run a single replica with the `Recreate` deployment strategy: a pending
 login is kept in memory, and two pods must not share `state.json`.
+
+To save into another app's ingest volume, the volume must be mountable by both pods. A ReadWriteOnce volume, like a
+default Longhorn volume, can only be attached to one node, so either:
+
+- run kobodl-rs as a second container in the other app's pod, which shares its volumes. With the bjw-s `app-template`
+  chart, volumes with `globalMounts` are mounted into every container, so the ingest folder is there automatically;
+- or make the ingest volume ReadWriteMany (Longhorn supports this through an NFS share).
+
+Then set `KOBODL_OUTPUT_DIR` to the mount path, for example `/cwa-book-ingest`, and run the container as the same user
+as the other app (`runAsUser`/`runAsGroup`, plus `fsGroup` so `/data` stays writable).
 
 ### Staying logged in
 

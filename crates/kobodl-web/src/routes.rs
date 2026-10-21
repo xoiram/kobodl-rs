@@ -8,7 +8,7 @@ use axum::http::{HeaderValue, StatusCode, header};
 use axum::middleware;
 use axum::response::{Html, IntoResponse, Redirect, Response};
 use axum::routing::{get, post};
-use kobo::{ACTIVATION_PAGE, ActivationStatus, BookKind, Credentials, KoboError, credentials_from_settings};
+use kobo::{ACTIVATION_PAGE, ActivationStatus, Book, BookKind, Credentials, KoboError, credentials_from_settings};
 use percent_encoding::{NON_ALPHANUMERIC, utf8_percent_encode};
 use serde::Deserialize;
 use tokio_util::io::ReaderStream;
@@ -28,6 +28,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/library", get(library_page))
         .route("/library/refresh", post(refresh_library))
         .route("/books/{revision_id}/epub", get(download_book))
+        .route("/books/{revision_id}/save", post(save_book))
         .route("/healthz", get(|| async { "ok" }))
         .layer(middleware::from_fn(reject_cross_site_requests))
         .with_state(state)
@@ -160,10 +161,36 @@ struct LibraryFilters {
     archived: bool,
 }
 
+impl LibraryFilters {
+    fn query_string(&self) -> String {
+        let mut query = Vec::new();
+        if self.read {
+            query.push("read=true");
+        }
+        if self.archived {
+            query.push("archived=true");
+        }
+        query.join("&")
+    }
+}
+
+/// The filters plus the saved-book notice. Not built with `#[serde(flatten)]`, because flattened fields lose their
+/// types when parsed from a query string, and `read=true` would no longer parse as a bool.
+#[derive(Deserialize)]
+struct LibraryQuery {
+    #[serde(default)]
+    read: bool,
+    #[serde(default)]
+    archived: bool,
+    /// The revision ID of the book that was just saved to the output folder.
+    saved: Option<String>,
+}
+
 async fn library_page(
     State(state): State<Arc<AppState>>,
-    Query(filters): Query<LibraryFilters>,
+    Query(LibraryQuery { read, archived, saved }): Query<LibraryQuery>,
 ) -> Result<Response, AppError> {
+    let filters = LibraryFilters { read, archived };
     let client = state.client();
     let credentials = client.credentials();
     if !credentials.is_logged_in() {
@@ -176,6 +203,12 @@ async fn library_page(
         .filter(|book| (filters.read || !book.read) && (filters.archived || !book.archived))
         .map(BookRow::new)
         .collect();
+    let saved_title = saved.and_then(|saved| {
+        library
+            .iter()
+            .find(|book| book.revision_id == saved)
+            .map(|book| book.title.clone())
+    });
 
     render(&LibraryPage {
         email: credentials.email,
@@ -183,6 +216,8 @@ async fn library_page(
         books,
         show_read: filters.read,
         show_archived: filters.archived,
+        output_dir: state.output_dir.as_ref().map(|dir| dir.display().to_string()),
+        saved_title,
     })
 }
 
@@ -197,10 +232,7 @@ async fn download_book(
 ) -> Result<Response, AppError> {
     let client = state.client();
     let library = state.library(&client).await?;
-    let book = library
-        .iter()
-        .find(|book| book.revision_id == revision_id && book.kind == BookKind::Ebook)
-        .ok_or(AppError::NotFound)?;
+    let book = find_ebook(&library, &revision_id)?;
 
     let directory = tempfile::tempdir()?;
     let path = directory.path().join("book.epub");
@@ -222,6 +254,37 @@ async fn download_book(
         Body::from_stream(ReaderStream::new(file)),
     )
         .into_response())
+}
+
+/// Saves a book to the output folder, then goes back to the library with the same filters.
+async fn save_book(
+    State(state): State<Arc<AppState>>,
+    Path(revision_id): Path<String>,
+    Form(filters): Form<LibraryFilters>,
+) -> Result<Response, AppError> {
+    let output_dir = state.output_dir.as_ref().ok_or(AppError::NotFound)?;
+    let client = state.client();
+    let library = state.library(&client).await?;
+    let book = find_ebook(&library, &revision_id)?;
+
+    let destination = output_dir.join(book.file_name());
+    client.download_book(&book.revision_id, &destination).await?;
+    tracing::info!(title = book.title, path = %destination.display(), "saved book");
+
+    let mut query = filters.query_string();
+    if !query.is_empty() {
+        query.push('&');
+    }
+    query.push_str("saved=");
+    query.extend(utf8_percent_encode(&book.revision_id, NON_ALPHANUMERIC));
+    Ok(see_other(&format!("/library?{query}")))
+}
+
+fn find_ebook<'a>(library: &'a [Book], revision_id: &str) -> Result<&'a Book, AppError> {
+    library
+        .iter()
+        .find(|book| book.revision_id == revision_id && book.kind == BookKind::Ebook)
+        .ok_or(AppError::NotFound)
 }
 
 /// An attachment header with an ASCII fallback name for old clients, and the real name in RFC 5987 encoding.
