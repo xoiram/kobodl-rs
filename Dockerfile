@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Builds a static musl binary. aws-lc (the TLS crypto library) needs a C toolchain.
-FROM rust:1.95-alpine AS build
+FROM rust:1.99-alpine AS build
 RUN apk add --no-cache build-base cmake perl
 WORKDIR /src
 COPY . .
