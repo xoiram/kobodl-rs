@@ -225,8 +225,8 @@ async fn logs_in_with_web_activation() {
 
 fn ecb_encrypt(key: &[u8; 16], data: &mut [u8]) {
     let cipher = Aes128::new(&(*key).into());
-    for chunk in data.chunks_exact_mut(16) {
-        cipher.encrypt_block(chunk.try_into().unwrap());
+    for block in data.as_chunks_mut::<16>().0 {
+        cipher.encrypt_block(block.into());
     }
 }
 

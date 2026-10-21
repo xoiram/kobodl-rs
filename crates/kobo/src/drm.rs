@@ -162,8 +162,9 @@ fn user_key(device_id: &str, user_id: &str) -> [u8; AES_BLOCK_SIZE] {
 /// Decrypts `data` with AES-128-ECB. The length of `data` must be a multiple of the block size.
 fn ecb_decrypt_in_place(key: &[u8; AES_BLOCK_SIZE], data: &mut [u8]) {
     let cipher = Aes128::new(&(*key).into());
-    for chunk in data.chunks_exact_mut(AES_BLOCK_SIZE) {
-        let block: &mut Block<Aes128> = chunk.try_into().expect("chunks are exactly one block long");
+    let (blocks, _) = data.as_chunks_mut::<AES_BLOCK_SIZE>();
+    for block in blocks {
+        let block: &mut Block<Aes128> = block.into();
         cipher.decrypt_block(block);
     }
 }
@@ -210,8 +211,8 @@ mod tests {
 
     fn ecb_encrypt_in_place(key: &[u8; AES_BLOCK_SIZE], data: &mut [u8]) {
         let cipher = Aes128::new(&(*key).into());
-        for chunk in data.chunks_exact_mut(AES_BLOCK_SIZE) {
-            cipher.encrypt_block(chunk.try_into().unwrap());
+        for block in data.as_chunks_mut::<AES_BLOCK_SIZE>().0 {
+            cipher.encrypt_block(block.into());
         }
     }
 
