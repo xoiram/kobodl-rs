@@ -1,3 +1,8 @@
 /target
 state.json
 /data/
+
+# Real books and their keys, from tools/fetch_encrypted_book.py
+*.epub
+keys.json
+__pycache__/
