@@ -21,6 +21,10 @@ pub struct LibraryPage {
     pub hidden_count: usize,
     pub show_read: bool,
     pub show_archived: bool,
+    /// Where "Save to server" puts books. The button is hidden when this isn't set.
+    pub output_dir: Option<String>,
+    /// The title of the book that was just saved to the output folder.
+    pub saved_title: Option<String>,
 }
 
 pub struct BookRow {

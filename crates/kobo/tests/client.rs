@@ -303,6 +303,13 @@ async fn downloads_and_decrypts_a_book() {
     assert_eq!(decrypted, chapter);
     // Only the book is left in the directory, no temporary files.
     assert_eq!(std::fs::read_dir(directory.path()).unwrap().count(), 1);
+    // Other users, like a program watching the folder, can read it.
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mode = std::fs::metadata(&destination).unwrap().permissions().mode();
+        assert_eq!(mode & 0o444, 0o444, "mode {mode:o}");
+    }
 }
 
 #[tokio::test]

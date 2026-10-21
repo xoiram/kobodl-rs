@@ -16,15 +16,24 @@ pub use store::CredentialsStore;
 pub struct Config {
     /// Where `state.json` is kept.
     pub data_dir: PathBuf,
+    /// A folder on the server that books can be saved to, for example the ingest folder of another app.
+    pub output_dir: Option<PathBuf>,
     /// The Kobo service URLs. Only tests change these.
     pub endpoints: Endpoints,
 }
 
 pub fn app(config: Config) -> anyhow::Result<Router> {
+    if let Some(output_dir) = &config.output_dir
+        && !output_dir.is_dir()
+    {
+        anyhow::bail!("the output folder {} doesn't exist", output_dir.display());
+    }
+
     let store = CredentialsStore::new(&config.data_dir);
     let client = new_client(&store, &config.endpoints, store.load()?)?;
     let state = AppState {
         store,
+        output_dir: config.output_dir,
         endpoints: config.endpoints,
         client: RwLock::new(Arc::new(client)),
         activation: Mutex::new(None),
@@ -35,6 +44,7 @@ pub fn app(config: Config) -> anyhow::Result<Router> {
 
 struct AppState {
     store: CredentialsStore,
+    output_dir: Option<PathBuf>,
     endpoints: Endpoints,
     /// Replaced on logout, so that requests already in flight finish with the client they started with.
     client: RwLock<Arc<KoboClient>>,

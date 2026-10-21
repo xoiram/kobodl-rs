@@ -417,9 +417,12 @@ impl KoboClient {
 
     /// Downloads an ebook, removes the DRM, and saves it as an EPUB at `destination`.
     ///
-    /// Temporary files are created next to `destination`, so the final rename can't cross filesystems. Nothing is
-    /// left at `destination` if this fails. The file is created with the default permissions of temporary files,
-    /// which is `0600` on Unix.
+    /// The book only appears at `destination` once it's complete, which makes it safe to save into a folder that
+    /// another program watches. Until then it is written to hidden `.kobodl-*.part` files next to `destination`, so
+    /// the final rename can't cross filesystems. Nothing is left behind if this fails.
+    ///
+    /// On Unix the file is created with mode `0644` (before the umask), so programs running as other users can read
+    /// it.
     pub async fn download_book(&self, revision_id: &str, destination: &Path) -> Result<(), KoboError> {
         let credentials = self.credentials();
         if !credentials.is_logged_in() {
@@ -442,7 +445,13 @@ impl KoboClient {
             Some(parent) if !parent.as_os_str().is_empty() => parent.to_owned(),
             _ => ".".into(),
         };
-        let temporary_file = move || tempfile::Builder::new().prefix(".kobodl-").tempfile_in(&directory);
+        let temporary_file = move || {
+            let mut builder = tempfile::Builder::new();
+            builder.prefix(".kobodl-").suffix(".part");
+            #[cfg(unix)]
+            builder.permissions(std::os::unix::fs::PermissionsExt::from_mode(0o644));
+            builder.tempfile_in(&directory)
+        };
 
         let downloaded = temporary_file()?;
         self.download_to_file(&download.url, downloaded.path()).await?;

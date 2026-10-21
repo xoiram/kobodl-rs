@@ -12,8 +12,11 @@ services:
       # Holds state.json with the Kobo device registration and login tokens. Keep it, or you'll have to log in again
       # and Kobo gets a new device.
       - kobodl-data:/data
+      # To save books into another app's ingest folder, mount it and set KOBODL_OUTPUT_DIR below:
+      # - /path/to/cwa-book-ingest:/cwa-book-ingest
     environment:
       RUST_LOG: info
+      # KOBODL_OUTPUT_DIR: /cwa-book-ingest
 
 volumes:
   kobodl-data:
