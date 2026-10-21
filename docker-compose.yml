@@ -2,7 +2,9 @@
 # authentication in front of it to reach it from elsewhere; see docs/reverse-proxy.md.
 services:
   kobodl:
-    build: .
+    image: ghcr.io/xoiram/kobodl-rs:latest
+    # To build from this checkout instead, replace the image line with:
+    # build: .
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"
