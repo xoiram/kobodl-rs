@@ -1,0 +1,17 @@
+# Example setup. The app has no login of its own, so it's only published on localhost here. Put a reverse proxy with
+# authentication in front of it to reach it from elsewhere; see docs/reverse-proxy.md.
+services:
+  kobodl:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      # Holds state.json with the Kobo device registration and login tokens. Keep it, or you'll have to log in again
+      # and Kobo gets a new device.
+      - kobodl-data:/data
+    environment:
+      RUST_LOG: info
+
+volumes:
+  kobodl-data:
