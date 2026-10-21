@@ -1,8 +1,7 @@
 # kobodl-rs
 
-A self-hosted web app for downloading the books you bought on [Kobo](https://www.kobo.com/) and removing the Kobo DRM
-from them, written in Rust. It is meant to sit next to [Calibre-Web Automated](https://github.com/crocodilestick/Calibre-Web-Automated)
-and drop DRM-free EPUBs into its ingest folder.
+A simple self-hosted web app for downloading the books you bought on [Kobo](https://www.kobo.com/) as DRM-free EPUBs,
+written in Rust.
 
 Status: planning. See [PLAN.md](PLAN.md).
 
