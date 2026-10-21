@@ -31,7 +31,7 @@ Main dependencies:
 | Async runtime | `tokio` |
 | HTTP client | `reqwest` with `rustls`, `json` and `stream` features; no OpenSSL, so musl static builds stay simple |
 | Web server | `axum`, `tower-http` |
-| Templates | `askama`, with `htmx` served from a vendored static file |
+| Templates | `askama` |
 | JSON | `serde`, `serde_json` |
 | Crypto | `aes`, `sha2`, `base64`, `hex`; PKCS7 unpadding by hand or with `block-padding` |
 | EPUB rewrite | `zip` |
@@ -118,13 +118,14 @@ padding instead of panicking, since that is what a wrong key looks like.
 
 ## Web app (`kobodl-web` crate)
 
-Server-rendered HTML with `askama` and a little `htmx` for the login polling. No SPA and no JS build step.
+Server-rendered HTML with `askama` and no JavaScript. While a login is waiting for the code to be entered, the login
+page reloads itself every 5 seconds and checks the activation on each load.
 
 | Route | Purpose |
 |---|---|
 | `GET /` | Redirects to `/login` if not activated, otherwise to `/library` |
-| `GET /login`, `POST /login/start` | Starts activation. Shows the code and a link to `https://www.kobo.com/activate` |
-| `GET /login/poll` | htmx polling every 5 s. Calls `check_activation`, then `authenticate_device(user_key)`, then saves state |
+| `GET /login` | Shows the login button, or the activation code while a login is pending. Checks the activation on each load and goes to the library when it's done |
+| `POST /login/start`, `POST /login/cancel` | Starts or abandons an activation |
 | `POST /logout` | Clears the credentials |
 | `GET /library` | Book table with filters for unread/all and hide/show archived. Marks Adobe DRM books and audiobooks as unsupported |
 | `POST /library/refresh` | Re-syncs the library cache |
@@ -135,8 +136,8 @@ Server-rendered HTML with `askama` and a little `htmx` for the login polling. No
 
 - Download to a temp file (`tempfile` crate), decrypt to a second temp file, stream that to the browser, and let both
   get deleted afterwards. Nothing is kept on the server.
-- A book takes a few seconds, so a plain request is fine. Show a "preparing download" state on the button and an
-  error message if it fails. A background job queue isn't needed for v1.
+- A book takes a few seconds, so a plain link and request is fine; the browser shows it as loading. Errors are shown
+  as an error page. A background job queue isn't needed for v1.
 - Filename: upstream's default `{Author} - {Title} {ShortRevisionId}.epub`, using its character whitelist for
   sanitizing. Set it with `Content-Disposition`, including the `filename*` form for non-ASCII titles.
 
@@ -157,8 +158,8 @@ Server-rendered HTML with `askama` and a little `htmx` for the login polling. No
   archived, read). Scrub personal data from any fixture taken from a real account before committing it.
 - Client: `wiremock` tests for the 401-refresh-retry, sync-token pagination, the `ActivateOnWeb` scraping (with a
   saved HTML fixture), and the download URL selection rules.
-- Web: `axum` handler tests with `tower::ServiceExt::oneshot` against a fake client, for the login state machine and
-  the CSRF checks.
+- Web: `axum` tests with `tower::ServiceExt::oneshot` against the fake API, for the login flow, the library page,
+  downloads, and the CSRF checks.
 
 ## Phases
 

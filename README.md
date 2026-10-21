@@ -3,7 +3,26 @@
 A simple self-hosted web app for downloading the books you bought on [Kobo](https://www.kobo.com/) as DRM-free EPUBs,
 written in Rust.
 
-Status: planning. See [PLAN.md](PLAN.md).
+Status: the web app works; packaging (Docker, CI) is next. See [PLAN.md](PLAN.md).
+
+## Running
+
+```sh
+cargo run --release -p kobodl-web
+```
+
+Then open <http://127.0.0.1:8080>, log in with the code the app shows you, and download books from the library page.
+
+Configuration is through environment variables:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `KOBODL_LISTEN` | `127.0.0.1:8080` | Address to listen on |
+| `KOBODL_DATA_DIR` | `data` | Directory for `state.json`, which holds the Kobo login tokens |
+| `RUST_LOG` | `info` | Log level |
+
+The app has no login of its own. If you make it reachable from other machines, put it behind a reverse proxy that
+handles authentication.
 
 ## Scope
 

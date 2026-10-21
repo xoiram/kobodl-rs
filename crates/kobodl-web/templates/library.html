@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header>
+  <h1>Kobo books</h1>
+  <div>
+    <span class="muted">{{ email }}</span>
+    <form class="inline" method="post" action="/logout">
+      <button class="secondary">Log out</button>
+    </form>
+  </div>
+</header>
+
+<div class="toolbar">
+  <form method="get" action="/library">
+    <label><input type="checkbox" name="read" value="true" {% if show_read %}checked{% endif %}> Show read books</label>
+    <label><input type="checkbox" name="archived" value="true" {% if show_archived %}checked{% endif %}> Show archived books</label>
+    <button class="secondary">Apply</button>
+  </form>
+  <form method="post" action="/library/refresh">
+    <button class="secondary">Sync with Kobo</button>
+  </form>
+</div>
+
+{% if books.is_empty() %}
+<p>No books to show.</p>
+{% else %}
+<table>
+  <thead><tr><th>Title</th><th>Author</th><th></th></tr></thead>
+  <tbody>
+  {% for book in books %}
+    <tr>
+      <td>{{ book.title }}{% if book.read %} <span class="muted">(read)</span>{% endif %}</td>
+      <td>{{ book.author }}</td>
+      <td class="action">
+        {% if let Some(reason) = book.unavailable %}
+        <span class="muted">{{ reason }}</span>
+        {% else %}
+        <a class="button" href="/books/{{ book.revision_id }}/epub">Download EPUB</a>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if hidden_count > 0 %}
+<p class="muted">{{ hidden_count }} {% if hidden_count == 1 %}book is{% else %}books are{% endif %} hidden by the filters.</p>
+{% endif %}
+<p class="muted">Downloads take a few seconds while the book is fetched and decrypted.</p>
+{% endblock %}

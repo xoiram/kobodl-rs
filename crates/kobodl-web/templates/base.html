@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  {% block head %}{% endblock %}
+  <title>{% block title %}Kobo books{% endblock %}</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #fafaf8; --fg: #1d1d1b; --muted: #6b6b66; --line: #e2e2dc; --accent: #0b6e4f; --accent-fg: #fff;
+      --error-bg: #fdecea; --error-fg: #8a1c12;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #161615; --fg: #ececea; --muted: #9a9a94; --line: #2e2e2b; --accent: #3fb68b; --accent-fg: #0d1f18;
+        --error-bg: #3a1714; --error-fg: #f4b4ab;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+    main { max-width: 56rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+    header { display: flex; flex-wrap: wrap; gap: .75rem; align-items: baseline; justify-content: space-between; }
+    h1 { font-size: 1.5rem; margin: 0 0 1rem; }
+    a { color: var(--accent); }
+    .muted { color: var(--muted); }
+    .button, button {
+      display: inline-block; padding: .45rem .9rem; border: 1px solid var(--accent); border-radius: .4rem;
+      background: var(--accent); color: var(--accent-fg); font: inherit; text-decoration: none; cursor: pointer;
+    }
+    .secondary { background: transparent; color: var(--accent); }
+    form.inline { display: inline; }
+    .error { background: var(--error-bg); color: var(--error-fg); padding: .75rem 1rem; border-radius: .4rem; }
+    .code { font-size: 2.5rem; font-weight: 600; letter-spacing: .2em; font-variant-numeric: tabular-nums; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: .55rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: .85rem; color: var(--muted); font-weight: 500; }
+    td.action { text-align: right; white-space: nowrap; }
+    @media (max-width: 36rem) {
+      thead { display: none; }
+      tr { display: block; padding: .5rem 0; border-bottom: 1px solid var(--line); }
+      td { display: block; border: 0; padding: .1rem 0; }
+      td.action { text-align: left; padding-top: .4rem; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
