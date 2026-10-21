@@ -3,12 +3,12 @@ use std::sync::Arc;
 use askama::Template;
 use axum::Router;
 use axum::body::Body;
-use axum::extract::{Path, Query, State};
+use axum::extract::{Form, Path, Query, State};
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::middleware;
 use axum::response::{Html, IntoResponse, Redirect, Response};
 use axum::routing::{get, post};
-use kobo::{ACTIVATION_PAGE, ActivationStatus, BookKind, Credentials, KoboError};
+use kobo::{ACTIVATION_PAGE, ActivationStatus, BookKind, Credentials, KoboError, credentials_from_settings};
 use percent_encoding::{NON_ALPHANUMERIC, utf8_percent_encode};
 use serde::Deserialize;
 use tokio_util::io::ReaderStream;
@@ -23,6 +23,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/login", get(login_page))
         .route("/login/start", post(start_login))
         .route("/login/cancel", post(cancel_login))
+        .route("/login/import", post(import_login))
         .route("/logout", post(logout))
         .route("/library", get(library_page))
         .route("/library/refresh", post(refresh_library))
@@ -92,6 +93,49 @@ async fn start_login(State(state): State<Arc<AppState>>) -> Result<Response, App
 async fn cancel_login(State(state): State<Arc<AppState>>) -> Response {
     *state.activation() = None;
     see_other("/login")
+}
+
+#[derive(Deserialize)]
+struct ImportForm {
+    settings: String,
+}
+
+/// Logs in with the credentials from a kobo-book-downloader or kobodl settings file.
+async fn import_login(State(state): State<Arc<AppState>>, Form(form): Form<ImportForm>) -> Result<Response, AppError> {
+    let credentials = match credentials_from_settings(&form.settings) {
+        Ok(credentials) => credentials,
+        Err(error) => return login_error(format!("Can't import the login: {error}.")),
+    };
+
+    // Refresh the tokens before saving anything. That checks that Kobo still accepts them, and gives this app its own
+    // tokens instead of sharing them with the other tool.
+    let client = state.unsaved_client(credentials)?;
+    if let Err(error) = client.refresh_tokens().await {
+        tracing::warn!("importing the login failed: {error}");
+        let message = match &error {
+            KoboError::Http(http) if http.status().is_some_and(|status| status.is_client_error()) => {
+                "Kobo didn't accept the imported login. The refresh token might have been used already or revoked. \
+                 Log in with a code instead."
+                    .to_owned()
+            }
+            _ => format!("Can't check the imported login with Kobo: {error}"),
+        };
+        return login_error(message);
+    }
+
+    state.replace_credentials(client.credentials())?;
+    *state.activation() = None;
+    state.clear_library().await;
+    tracing::info!("imported Kobo login");
+    Ok(see_other("/library"))
+}
+
+fn login_error(message: String) -> Result<Response, AppError> {
+    let page = LoginPage {
+        pending: None,
+        error: Some(message),
+    };
+    Ok((StatusCode::UNPROCESSABLE_ENTITY, Html(page.render()?)).into_response())
 }
 
 async fn logout(State(state): State<Arc<AppState>>) -> Result<Response, AppError> {

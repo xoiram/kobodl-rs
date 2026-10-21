@@ -25,5 +25,18 @@
 <form method="post" action="/login/start">
   <button>Get a code</button>
 </form>
+
+<details class="import">
+  <summary>Import the login from kobo-book-downloader or kobodl</summary>
+  <p>Paste the contents of the tool's settings file. That's <code>~/.config/kobo-book-downloader.json</code> for
+    kobo-book-downloader and <code>~/.config/kobodl.json</code> for kobodl.</p>
+  <p class="muted">Importing refreshes the tokens, and Kobo might then stop accepting the ones the other tool has saved.
+    If that tool stops working, log in to it again.</p>
+  <form method="post" action="/login/import">
+    <textarea name="settings" rows="10" required spellcheck="false" autocomplete="off"
+      aria-label="Settings file contents"></textarea>
+    <button>Import</button>
+  </form>
+</details>
 {% endif %}
 {% endblock %}

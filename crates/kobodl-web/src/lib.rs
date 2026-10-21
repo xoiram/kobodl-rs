@@ -61,6 +61,11 @@ impl AppState {
         Ok(())
     }
 
+    /// A client whose credential changes aren't saved, for trying credentials before switching to them.
+    fn unsaved_client(&self, credentials: Credentials) -> anyhow::Result<KoboClient> {
+        Ok(KoboClient::new(credentials)?.with_endpoints(self.endpoints.clone()))
+    }
+
     async fn library(&self, client: &KoboClient) -> Result<Arc<Vec<Book>>, KoboError> {
         let mut cached = self.library.lock().await;
         if let Some(books) = cached.as_ref() {

@@ -12,6 +12,7 @@ cargo run --release -p kobodl-web
 ```
 
 Then open <http://127.0.0.1:8080>, log in with the code the app shows you, and download books from the library page.
+If you already use kobo-book-downloader or kobodl, you can import the login from its settings file instead.
 
 Configuration is through environment variables:
 

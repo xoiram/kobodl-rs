@@ -126,6 +126,7 @@ page reloads itself every 5 seconds and checks the activation on each load.
 | `GET /` | Redirects to `/login` if not activated, otherwise to `/library` |
 | `GET /login` | Shows the login button, or the activation code while a login is pending. Checks the activation on each load and goes to the library when it's done |
 | `POST /login/start`, `POST /login/cancel` | Starts or abandons an activation |
+| `POST /login/import` | Logs in with the credentials from a kobo-book-downloader or kobodl settings file |
 | `POST /logout` | Clears the credentials |
 | `GET /library` | Book table with filters for unread/all and hide/show archived. Marks Adobe DRM books and audiobooks as unsupported |
 | `POST /library/refresh` | Re-syncs the library cache |
@@ -172,6 +173,9 @@ Each phase ends with something that works.
    book without the Python tool.
 3. **Web app.** Login flow, library page, download to the browser, persistent state. Done when the whole flow works
    from a fresh `state.json`.
+3.5. **Import an existing login.** Paste the settings file of kobo-book-downloader or kobodl on the login page. The
+   app refreshes the tokens before saving anything, which checks that they still work and gives the app its own
+   tokens. Done when an imported login can download a book.
 4. **Packaging.** Multi-stage Dockerfile (musl static binary on `scratch` or distroless), example docker-compose,
    reverse proxy docs, GitHub Actions CI (fmt, clippy, test).
 
