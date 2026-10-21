@@ -166,9 +166,9 @@ Each phase ends with something that works.
 
 1. **Library crate, DRM first.** Workspace setup, DRM removal, and its fixture test. Done when a real encrypted EPUB
    (downloaded with the Python tool's settings file) decrypts and opens in an e-reader app.
-2. **Kobo client.** Auth, refresh, initialization, library sync, and download, plus a throwaway example binary
-   (`cargo run --example`) that reads the Python tool's settings JSON and downloads one book. Done when it downloads
-   and decrypts a book without the Python tool.
+2. **Kobo client.** Auth, refresh, initialization, library sync, and download, plus a `kobo_cli` example that uses
+   the Python tool's settings JSON to list the library and download one book. Done when it downloads and decrypts a
+   book without the Python tool.
 3. **Web app.** Login flow, library page, download to the browser, persistent state. Done when the whole flow works
    from a fresh `state.json`.
 4. **Packaging.** Multi-stage Dockerfile (musl static binary on `scratch` or distroless), example docker-compose,

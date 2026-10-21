@@ -8,11 +8,10 @@
 
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{BufReader, BufWriter, Read};
+use std::io::{BufReader, BufWriter, Write};
 use std::process::ExitCode;
 
 use kobo::DrmRemover;
-use zip::ZipArchive;
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -41,22 +40,10 @@ fn run(input_path: &str, keys_path: &str, output_path: &str) -> Result<(), Box<d
 
     let input = BufReader::new(File::open(input_path)?);
     let output = BufWriter::new(File::create(output_path)?);
-    DrmRemover::new(device_id, user_id).remove_drm(input, output, &content_keys)?;
+    DrmRemover::new(device_id, user_id)
+        .remove_drm(input, output, &content_keys)?
+        .flush()?;
 
-    check_epub(output_path)
-}
-
-/// The same check as `CheckEpubFile` in the Python tool: every entry passes its CRC-32 check and
-/// `META-INF/container.xml` exists.
-fn check_epub(path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let mut archive = ZipArchive::new(BufReader::new(File::open(path)?))?;
-    for index in 0..archive.len() {
-        let mut entry = archive.by_index(index)?;
-        // Reading an entry to the end verifies its CRC-32.
-        std::io::copy(&mut entry.by_ref(), &mut std::io::sink())?;
-    }
-    if archive.index_for_name("META-INF/container.xml").is_none() {
-        return Err("META-INF/container.xml is missing, the output is not an EPUB".into());
-    }
+    kobo::check_epub(BufReader::new(File::open(output_path)?))?;
     Ok(())
 }
