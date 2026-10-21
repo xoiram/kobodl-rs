@@ -65,6 +65,18 @@ impl TestApp {
         self.app.clone().oneshot(request).await.unwrap()
     }
 
+    async fn post_form(&self, uri: &str, fields: &[(&str, &str)]) -> Response {
+        let body = url::form_urlencoded::Serializer::new(String::new())
+            .extend_pairs(fields)
+            .finish();
+        let request = Request::post(uri)
+            .header("sec-fetch-site", "same-origin")
+            .header(header::CONTENT_TYPE, "application/x-www-form-urlencoded")
+            .body(Body::from(body))
+            .unwrap();
+        self.app.clone().oneshot(request).await.unwrap()
+    }
+
     fn stored_credentials(&self) -> Credentials {
         CredentialsStore::new(self.data_dir.path()).load().unwrap()
     }
@@ -320,4 +332,77 @@ async fn kobo_errors_are_shown_as_a_page() {
 
     assert_eq!(response.status(), StatusCode::BAD_GATEWAY);
     assert!(body_text(response).await.contains("Archived books have to be restored"));
+}
+
+fn python_settings() -> String {
+    json!({
+        "AccessToken": "imported-access",
+        "DeviceId": "imported-device",
+        "RefreshToken": "imported-refresh",
+        "SerialNumber": "imported-serial",
+        "UserId": "imported-user",
+        "UserKey": "imported-key",
+    })
+    .to_string()
+}
+
+#[tokio::test]
+async fn imports_a_login_and_refreshes_its_tokens() {
+    let app = TestApp::start(None).await;
+    Mock::given(method("POST"))
+        .and(path("/v1/auth/refresh"))
+        .and(wiremock::matchers::header("authorization", "Bearer imported-access"))
+        .and(body_partial_json(json!({ "RefreshToken": "imported-refresh" })))
+        .respond_with(auth_response("fresh"))
+        .expect(1)
+        .mount(&app.server)
+        .await;
+
+    let response = app
+        .post_form("/login/import", &[("settings", &python_settings())])
+        .await;
+
+    assert_eq!(location(&response), "/library");
+    let stored = app.stored_credentials();
+    assert!(stored.is_logged_in());
+    assert_eq!(stored.device_id, "imported-device");
+    assert_eq!(stored.user_id, "imported-user");
+    assert_eq!(stored.access_token, "fresh");
+    assert_eq!(stored.refresh_token, "fresh-refresh");
+}
+
+#[tokio::test]
+async fn rejected_import_saves_nothing() {
+    let app = TestApp::start(None).await;
+    Mock::given(method("POST"))
+        .and(path("/v1/auth/refresh"))
+        .respond_with(ResponseTemplate::new(401))
+        .mount(&app.server)
+        .await;
+
+    let response = app
+        .post_form("/login/import", &[("settings", &python_settings())])
+        .await;
+
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    let page = body_text(response).await;
+    assert!(page.contains("didn&#39;t accept the imported login"), "{page}");
+    assert!(!page.contains("imported-access"), "tokens must not be echoed back");
+    assert!(!app.data_dir.path().join("state.json").exists());
+}
+
+#[tokio::test]
+async fn invalid_import_is_explained() {
+    let app = TestApp::start(None).await;
+
+    let response = app
+        .post_form("/login/import", &[("settings", r#"{"theme": "dark"}"#)])
+        .await;
+
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert!(
+        body_text(response)
+            .await
+            .contains("isn&#39;t a kobo-book-downloader or kobodl settings file")
+    );
 }

@@ -281,6 +281,16 @@ impl KoboClient {
         Ok(())
     }
 
+    /// Gets a new access and refresh token now, instead of waiting for the access token to expire. Use it to check
+    /// that imported credentials work, and to stop sharing tokens with the tool they were imported from.
+    pub async fn refresh_tokens(&self) -> Result<(), KoboError> {
+        let access_token = self.credentials().access_token;
+        if access_token.is_empty() {
+            return Err(KoboError::NotLoggedIn);
+        }
+        self.refresh_authentication(&access_token).await
+    }
+
     /// Refreshes the access token, unless another request already replaced `stale_access_token`.
     async fn refresh_authentication(&self, stale_access_token: &str) -> Result<(), KoboError> {
         let _guard = self.refresh_lock.lock().await;
