@@ -3,7 +3,7 @@
 A simple self-hosted web app for downloading the books you bought on [Kobo](https://www.kobo.com/) as DRM-free EPUBs,
 written in Rust.
 
-Status: the web app works; packaging (Docker, CI) is next. See [PLAN.md](PLAN.md).
+Status: v1 is done. See [PLAN.md](PLAN.md) for how it was built and what's left open.
 
 ## Running
 
@@ -22,8 +22,29 @@ Configuration is through environment variables:
 | `KOBODL_DATA_DIR` | `data` | Directory for `state.json`, which holds the Kobo login tokens |
 | `RUST_LOG` | `info` | Log level |
 
+### Docker
+
+```sh
+docker compose up -d --build
+```
+
+The example [docker-compose.yml](docker-compose.yml) publishes the app on `127.0.0.1:8080` only and keeps its data in
+the `kobodl-data` volume. The image runs as a non-root user (UID 65532); if you bind-mount a host directory at `/data`
+instead of using a volume, make that directory writable for that user.
+
+### Staying logged in
+
+The login is stored in `state.json` in the data directory: the device registration Kobo knows this app by, and the
+access and refresh tokens. It's read at startup and saved whenever Kobo issues new tokens, so restarts and new
+containers stay logged in on the same device as long as the data directory is kept. Logging out keeps the device
+registration too, so logging in again doesn't add another device to your Kobo account.
+
+The file holds account tokens and is only readable by the user the app runs as. Back it up like a password.
+
+### Security
+
 The app has no login of its own. If you make it reachable from other machines, put it behind a reverse proxy that
-handles authentication.
+handles authentication. See [docs/reverse-proxy.md](docs/reverse-proxy.md) for Caddy and nginx examples.
 
 ## Scope
 
