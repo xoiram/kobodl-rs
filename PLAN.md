@@ -150,8 +150,9 @@ Server-rendered HTML with `askama` and a little `htmx` for the login polling. No
 ## Testing
 
 - DRM: build a fixture EPUB in the test, encrypted with known keys, and check that it decrypts byte for byte and that
-  `mimetype` comes out first and stored. Add one test against a real downloaded book, ignored by default
-  (`#[ignore]`), that reads its path and keys from env vars.
+  `mimetype` comes out first and stored. Known-answer tests compare against values computed with the Python
+  implementation. For a real book, `tools/fetch_encrypted_book.py` saves an encrypted book and its keys using the
+  Python tool's login, and the `decrypt_book` example decrypts it.
 - Library parsing: JSON fixtures for each entitlement shape (ebook, audiobook, subscription, preview, refunded,
   archived, read). Scrub personal data from any fixture taken from a real account before committing it.
 - Client: `wiremock` tests for the 401-refresh-retry, sync-token pagination, the `ActivateOnWeb` scraping (with a
