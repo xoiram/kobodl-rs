@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block head %}
+{% if pending.is_some() %}<meta http-equiv="refresh" content="5">{% endif %}
+{% endblock %}
+
+{% block title %}Log in · Kobo books{% endblock %}
+
+{% block content %}
+<h1>Log in to Kobo</h1>
+
+{% if let Some(error) = error %}
+<p class="error">{{ error }}</p>
+{% endif %}
+
+{% if let Some(pending) = pending %}
+<p>Open <a href="{{ pending.activation_page }}" target="_blank" rel="noopener">{{ pending.activation_page }}</a> and enter this code. You might have to log in to kobo.com first.</p>
+<p class="code">{{ pending.code }}</p>
+<p class="muted">This page checks every few seconds and continues when the activation is done.</p>
+<form class="inline" method="post" action="/login/cancel">
+  <button class="secondary">Cancel</button>
+</form>
+{% else %}
+<p>This app logs in the same way a Kobo e-reader does: you get a code, then enter it on the Kobo website.</p>
+<form method="post" action="/login/start">
+  <button>Get a code</button>
+</form>
+{% endif %}
+{% endblock %}
