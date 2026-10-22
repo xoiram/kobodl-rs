@@ -96,6 +96,11 @@ This is a reimplementation of these projects. All of the Kobo API knowledge come
 - [obok.py](https://github.com/apprenticeharper/DeDRM_tools/blob/master/Other_Tools/Kobo/obok.py) by Physisticated,
   from DeDRM_tools: the original Kobo DRM removal algorithm that both projects are based on.
 
+The DRM removal in [`crates/kobo/src/drm.rs`](crates/kobo/src/drm.rs) is a Rust port of `koboDrmRemover.py` from
+kobodl, which derives from `obok.py`. Both kobo-book-downloader projects are under the Unlicense. `obok.py` has no
+license file in its repository that I could find. It is credited here because the algorithm comes from it. If you
+are an author of one of these projects and want the credit changed or the code removed, please open an issue.
+
 ## License
 
 [MIT](LICENSE). Anyone who copies or redistributes the code has to keep the copyright notice.

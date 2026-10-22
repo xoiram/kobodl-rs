@@ -1,6 +1,9 @@
 //! Removal of the Kobo DRM (`KDRM`) from downloaded EPUBs.
 //!
-//! Ported from `koboDrmRemover.py` in kobodl, which is based on obok.py from DeDRM_tools.
+//! Ported from `koboDrmRemover.py` in kobodl (<https://github.com/subdavis/kobo-book-downloader>, Unlicense), which is
+//! based on `obok.py` by Physisticated from DeDRM_tools
+//! (<https://github.com/apprenticeharper/DeDRM_tools/blob/master/Other_Tools/Kobo/obok.py>). `obok.py` has no license
+//! file that we could find, so see the "Prior art" section of the README for how to reach us about attribution.
 //!
 //! A Kobo EPUB is a ZIP archive in which some entries are encrypted with AES-128-ECB and PKCS7 padding. Each encrypted
 //! entry has its own content key, which the `content_access_book` API returns, itself encrypted with AES-128-ECB under
