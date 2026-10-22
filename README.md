@@ -98,4 +98,4 @@ This is a reimplementation of these projects. All of the Kobo API knowledge come
 
 ## License
 
-Not decided yet.
+[MIT](LICENSE). Anyone who copies or redistributes the code has to keep the copyright notice.
