@@ -1,7 +1,8 @@
 // Renovate, self-hosted in the d42-infra cluster (docs/runbooks/renovate.md
 // there). It covers Cargo dependencies, the Dockerfile's base images and the
 // GitHub Actions in .github/workflows. Minor and patch updates automerge once
-// CI passes; majors and digest bumps are PRs to review.
+// CI passes, grouped into one PR a day; majors and digest bumps are separate
+// PRs to review.
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: ['config:recommended', ':dependencyDashboard'],
@@ -26,8 +27,11 @@
   ],
   packageRules: [
     {
-      description: 'Minor and patch updates automerge once CI passes',
+      description: 'Minor and patch updates: one grouped PR a day, automerged once CI passes',
       matchUpdateTypes: ['minor', 'patch'],
+      groupName: 'all minor and patch dependencies',
+      groupSlug: 'all-minor-patch',
+      schedule: ['before 6am'],
       automerge: true,
     },
     {
