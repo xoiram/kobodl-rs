@@ -1,19 +1,39 @@
 // Renovate, self-hosted in the d42-infra cluster (docs/runbooks/renovate.md
 // there). It covers Cargo dependencies, the Dockerfile's base images and the
-// GitHub Actions in .github/workflows. Everything is a PR to review: CI runs
-// on them, but nothing automerges.
+// GitHub Actions in .github/workflows. Minor and patch updates automerge once
+// CI passes; majors and digest bumps are PRs to review.
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: ['config:recommended', ':dependencyDashboard'],
   timezone: 'Europe/Oslo',
   gitAuthor: 'Renovate <renovate@dot42.no>',
-  // The Rust version is pinned in the Dockerfile (rust:1.95-alpine) and in
-  // rust-toolchain.toml; Renovate only knows the first, so bump both together.
+  // Renovate merges the PR itself after CI is green, not GitHub's auto-merge
+  // (there's no branch protection to make that wait for CI).
+  automergeType: 'pr',
+  platformAutomerge: false,
+  customManagers: [
+    {
+      // The Rust version is pinned twice: the Dockerfile (rust:1.99-alpine)
+      // and rust-toolchain.toml. This makes Renovate see the second one too,
+      // as the same rust image, so the group below bumps both in one PR.
+      customType: 'regex',
+      description: 'Rust toolchain channel',
+      managerFilePatterns: ['/^rust-toolchain\\.toml$/'],
+      matchStrings: ['channel = "(?<currentValue>\\d+\\.\\d+)"'],
+      depNameTemplate: 'rust',
+      datasourceTemplate: 'docker',
+    },
+  ],
   packageRules: [
     {
-      description: 'Rust toolchain: keep rust-toolchain.toml in step by hand',
+      description: 'Minor and patch updates automerge once CI passes',
+      matchUpdateTypes: ['minor', 'patch'],
+      automerge: true,
+    },
+    {
+      description: 'Rust toolchain: the Dockerfile and rust-toolchain.toml in one PR',
       matchPackageNames: ['rust'],
-      prBodyNotes: ['Also bump `channel` in `rust-toolchain.toml`.'],
+      groupName: 'rust',
     },
   ],
 }
