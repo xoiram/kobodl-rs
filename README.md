@@ -46,7 +46,7 @@ type (`chore:`, `docs:`, `ci:` and so on) also counts as a patch release. A comm
 doesn't run the release workflow, so it never opens or updates the release PR by itself. A release PR
 stays open on `main` with the next version and changelog. Merging it tags `vX.Y.Z`, creates the GitHub release and
 publishes the image with that version. The version lives in `[workspace.package]` in `Cargo.toml`, and release-please
-updates it, along with `Cargo.lock`.
+updates it, and the workflow refreshes `Cargo.lock` on the release branch.
 
 ### Saving to a folder on the server
 
