@@ -5,6 +5,14 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
+  # Called by release.yml with the tag release-please created. Tags made with GITHUB_TOKEN don't trigger the push
+  # trigger above, so the versioned image is built from here instead.
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag, like v1.2.3
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -42,7 +50,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       # Tags: "latest" and "main" follow the main branch, "sha-<commit>" pins a build, and a tag like v1.2.3 also
-      # publishes "1.2.3" and "1.2".
+      # publishes "1.2.3" and "1.2". Releases made by release.yml pass the tag as an input instead of a pushed ref.
       - id: meta
         uses: docker/metadata-action@v5
         with:
@@ -51,8 +59,8 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
             type=sha
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}},value=${{ inputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.tag }}
       - uses: docker/build-push-action@v6
         with:
           context: .

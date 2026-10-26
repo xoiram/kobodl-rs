@@ -26,7 +26,7 @@ Configuration is through environment variables:
 ### Docker
 
 The image is published to `ghcr.io/xoiram/kobodl-rs`. `latest` follows the main branch, and `sha-<commit>` tags pin
-a specific build.
+a specific build. Releases are tagged `X.Y.Z` and `X.Y`; prefer one of those for a stable deployment.
 
 ```sh
 docker compose up -d
@@ -36,6 +36,17 @@ The example [docker-compose.yml](docker-compose.yml) publishes the app on `127.0
 the `kobodl-data` volume. While the repository is private, so is the image: log in first with
 `docker login ghcr.io -u <github-user>` and a personal access token with the `read:packages` scope. The image runs as a non-root user (UID 65532); if you bind-mount a host directory at `/data`
 instead of using a volume, make that directory writable for that user.
+
+### Releases
+
+Versions follow [semantic versioning](https://semver.org). Commits to `main` use
+[conventional commits](https://www.conventionalcommits.org): `fix:` bumps the patch version, `feat:` the minor
+version, and `feat!:` or a `BREAKING CHANGE:` footer the major version (minor while the version is 0.x). Every other
+type (`chore:`, `docs:`, `ci:` and so on) also counts as a patch release. A commit with `[skip ci]` in its message
+doesn't run the release workflow, so it never opens or updates the release PR by itself. A release PR
+stays open on `main` with the next version and changelog. Merging it tags `vX.Y.Z`, creates the GitHub release and
+publishes the image with that version. The version lives in `[workspace.package]` in `Cargo.toml`, and release-please
+updates it, along with `Cargo.lock`.
 
 ### Saving to a folder on the server
 
