@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/xoiram/kobodl-rs/compare/v0.1.1...v0.1.2) (2026-10-30)
+
+
+### Chores
+
+* use conventional commit titles for Renovate PRs ([2d0b2f8](https://github.com/xoiram/kobodl-rs/commit/2d0b2f884a66749d127ebe0486c25c82fc5b7ac7))
+
 ## [0.1.1](https://github.com/xoiram/kobodl-rs/compare/v0.1.0...v0.1.1) (2026-10-26)
 
 
