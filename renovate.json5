@@ -7,6 +7,9 @@
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: ['config:recommended', ':dependencyDashboard'],
   timezone: 'Europe/Oslo',
+  // Conventional commits ("chore(deps): update ..."), so that release-please
+  // counts dependency updates as releasable changes.
+  semanticCommits: 'enabled',
   gitAuthor: 'Renovate <renovate@dot42.no>',
   // Renovate merges the PR itself after CI is green, not GitHub's auto-merge
   // (there's no branch protection to make that wait for CI).
