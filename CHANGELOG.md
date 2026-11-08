@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.9](https://github.com/xoiram/kobodl-rs/compare/v0.1.8...v0.1.9) (2026-11-08)
+
+
+### Chores
+
+* **deps:** update rust crate html-escape to v0.3.1 ([#28](https://github.com/xoiram/kobodl-rs/issues/28)) ([f4a4b8e](https://github.com/xoiram/kobodl-rs/commit/f4a4b8ee3b92a4d721249427ba7e4e0603f8c860))
+* **deps:** update rust crate zip to v9.4.2 ([#26](https://github.com/xoiram/kobodl-rs/issues/26)) ([5a43821](https://github.com/xoiram/kobodl-rs/commit/5a438216732445afcff65b78867cf0686fa43e63))
+
 ## [0.1.8](https://github.com/xoiram/kobodl-rs/compare/v0.1.7...v0.1.8) (2026-11-07)
 
 
