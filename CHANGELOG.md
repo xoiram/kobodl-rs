@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.12](https://github.com/xoiram/kobodl-rs/compare/v0.1.11...v0.1.12) (2026-11-14)
+
+
+### Chores
+
+* **deps:** update docker/setup-buildx-action action to v4 ([79a0e82](https://github.com/xoiram/kobodl-rs/commit/79a0e82e5b8a8780fe4ed4de44f63abf6f6c277a))
+* **deps:** update docker/setup-buildx-action action to v4 ([11e72c2](https://github.com/xoiram/kobodl-rs/commit/11e72c23a14bfdc8e8e7afb2c155ce9a66c1bfe7))
+* **deps:** update rust ([#33](https://github.com/xoiram/kobodl-rs/issues/33)) ([06fae5e](https://github.com/xoiram/kobodl-rs/commit/06fae5e831ba305a4f009878fb37c7cab9e693b9))
+
 ## [0.1.11](https://github.com/xoiram/kobodl-rs/compare/v0.1.10...v0.1.11) (2026-11-11)
 
 
