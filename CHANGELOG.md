@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.13](https://github.com/xoiram/kobodl-rs/compare/v0.1.12...v0.1.13) (2026-11-16)
+
+
+### Chores
+
+* **deps:** update all minor and patch dependencies ([#36](https://github.com/xoiram/kobodl-rs/issues/36)) ([d668f84](https://github.com/xoiram/kobodl-rs/commit/d668f84528ca277ec5ca7c5ccdf8fc97e38097b2))
+
 ## [0.1.12](https://github.com/xoiram/kobodl-rs/compare/v0.1.11...v0.1.12) (2026-11-14)
 
 
