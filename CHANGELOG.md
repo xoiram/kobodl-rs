@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.16](https://github.com/xoiram/kobodl-rs/compare/v0.1.15...v0.1.16) (2026-11-19)
+
+
+### Chores
+
+* **deps:** update rust crate zip to v9.7.1 ([#43](https://github.com/xoiram/kobodl-rs/issues/43)) ([db5f798](https://github.com/xoiram/kobodl-rs/commit/db5f79865f7ce2e1f5280318ae75815097c04695))
+* **deps:** update rust crate zip to v9.7.2 ([#45](https://github.com/xoiram/kobodl-rs/issues/45)) ([7cc6920](https://github.com/xoiram/kobodl-rs/commit/7cc69201556e7b64a8fd40fee454c51de1f8b395))
+
 ## [0.1.15](https://github.com/xoiram/kobodl-rs/compare/v0.1.14...v0.1.15) (2026-11-18)
 
 
