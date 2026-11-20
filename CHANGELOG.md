@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.18](https://github.com/xoiram/kobodl-rs/compare/v0.1.17...v0.1.18) (2026-11-20)
+
+
+### Chores
+
+* **renovate:** weekly instead of daily ([38e2fe6](https://github.com/xoiram/kobodl-rs/commit/38e2fe6b215d0cf55dc27e89c36e63541d0e7910))
+
 ## [0.1.17](https://github.com/xoiram/kobodl-rs/compare/v0.1.16...v0.1.17) (2026-11-20)
 
 
