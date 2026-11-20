@@ -1,12 +1,17 @@
 // Renovate, self-hosted in the d42-infra cluster (docs/runbooks/renovate.md
 // there). It covers Cargo dependencies, the Dockerfile's base images and the
-// GitHub Actions in .github/workflows. Minor and patch updates automerge once
-// CI passes, grouped into one PR a day; majors and digest bumps are separate
-// PRs to review.
+// GitHub Actions in .github/workflows. Everything runs once a week, early
+// Monday (security fixes come right away). Minor and patch updates automerge
+// once CI passes, grouped into one PR; majors and digest bumps are separate
+// PRs to review. Every merge here is a release-please release and an image
+// build, which the cluster then rolls out, so fewer is better.
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: ['config:recommended', ':dependencyDashboard'],
   timezone: 'Europe/Oslo',
+  // Weekly, not daily: one batch of PRs. Security PRs ignore this
+  // (vulnerabilityAlerts has its own, empty schedule).
+  schedule: ['before 6am on monday'],
   // Conventional commits ("chore(deps): update ..."), so that release-please
   // counts dependency updates as releasable changes.
   semanticCommits: 'enabled',
@@ -15,6 +20,14 @@
   // (there's no branch protection to make that wait for CI).
   automergeType: 'pr',
   platformAutomerge: false,
+  // Dependabot alerts aren't relied on; OSV gives security PRs without them.
+  osvVulnerabilityAlerts: true,
+  // Weekly lockfile refresh: how transitive crates get their fixes.
+  lockFileMaintenance: {
+    enabled: true,
+    automerge: true,
+    schedule: ['before 6am on monday'],
+  },
   customManagers: [
     {
       // The Rust version is pinned twice: the Dockerfile (rust:1.99-alpine)
@@ -30,11 +43,10 @@
   ],
   packageRules: [
     {
-      description: 'Minor and patch updates: one grouped PR a day, automerged once CI passes',
+      description: 'Minor and patch updates: one grouped PR a week, automerged once CI passes',
       matchUpdateTypes: ['minor', 'patch'],
       groupName: 'all minor and patch dependencies',
       groupSlug: 'all-minor-patch',
-      schedule: ['before 6am'],
       automerge: true,
     },
     {
