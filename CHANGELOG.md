@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.19](https://github.com/xoiram/kobodl-rs/compare/v0.1.18...v0.1.19) (2026-11-22)
+
+
+### Chores
+
+* **deps:** update rust crate url to v2.5.9 [security] ([d66cfd7](https://github.com/xoiram/kobodl-rs/commit/d66cfd7315fa6be198485ec710f24e61925f44fa))
+* **deps:** update rust crate url to v2.5.9 [security] ([11b86c5](https://github.com/xoiram/kobodl-rs/commit/11b86c5e38a71e5794559bc300ef245f931a1d1b))
+
 ## [0.1.18](https://github.com/xoiram/kobodl-rs/compare/v0.1.17...v0.1.18) (2026-11-20)
 
 
