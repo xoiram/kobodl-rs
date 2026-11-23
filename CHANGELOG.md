@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.20](https://github.com/xoiram/kobodl-rs/compare/v0.1.19...v0.1.20) (2026-11-23)
+
+
+### Chores
+
+* **deps:** lock file maintenance ([#53](https://github.com/xoiram/kobodl-rs/issues/53)) ([4003ae7](https://github.com/xoiram/kobodl-rs/commit/4003ae7dd57bbbe6dafca6a3a667ae07a9dbb949))
+* **deps:** update rust crate zip to v9.8.1 ([#52](https://github.com/xoiram/kobodl-rs/issues/52)) ([15c94e1](https://github.com/xoiram/kobodl-rs/commit/15c94e1696ced31579d4d6a0bc23ea89fb81b61b))
+
 ## [0.1.19](https://github.com/xoiram/kobodl-rs/compare/v0.1.18...v0.1.19) (2026-11-22)
 
 

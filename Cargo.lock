@@ -952,7 +952,7 @@ dependencies = [
 
 [[package]]
 name = "kobo"
-version = "0.1.19"
+version = "0.1.20"
 dependencies = [
  "aes",
  "base64 0.23.1",
@@ -975,7 +975,7 @@ dependencies = [
 
 [[package]]
 name = "kobodl-web"
-version = "0.1.19"
+version = "0.1.20"
 dependencies = [
  "anyhow",
  "askama",
